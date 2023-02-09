@@ -72,7 +72,8 @@ CREATE PROCEDURE ClienteAdd
 )
 AS
 
-IF((select (((365* year(getdate())) - (365*(year(@dtFechaNacimiento)))) + (month(getdate())-month(@dtFechaNacimiento))*30 + (day(getdate()) -  day(@dtFechaNacimiento)))/365) > 18)
+IF(((select (((365* year(getdate())) - (365*(year(@dtFechaNacimiento)))) + (month(getdate())-month(@dtFechaNacimiento))*30 + (day(getdate()) -  day(@dtFechaNacimiento)))/365) > 18)
+	AND (SELECT COUNT(*) FROM Cliente WHERE strNumeroIdentificacion = @strNumeroIdentificacion) = 0)
 BEGIN
 	INSERT INTO Cliente
 	(
@@ -103,7 +104,7 @@ END
 ELSE
 	BEGIN 		
 		DECLARE @err_message VARCHAR(255)
-		SET @err_message = 'No se puede insertar un cliente menor de edad'
+		SET @err_message = 'No se puede insertar un cliente menor de edad, o el cliente ya existe'
 		RAISERROR (@err_message, 11,1)
 	END
 
