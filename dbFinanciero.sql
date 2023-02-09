@@ -26,7 +26,7 @@ CREATE TABLE TipoProducto
 
 CREATE TABLE ProductoEstado
 (
-	IdProductoEstado INT,
+	IdProductoEstado INT PRIMARY KEY IDENTITY(1,1),
 	strNombre VARCHAR(50)
 )
 
@@ -437,6 +437,7 @@ FROM Transaccion
 WHERE IdProducto = @IdProducto
 
 --------------//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+GO
 
 ----Llenada de datos en tablas maestras
 INSERT INTO TipoTransaccion (strNombre) VALUES ('Consignación')
