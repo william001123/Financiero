@@ -16,10 +16,6 @@ namespace Financiero.Models
         public int IdTipoProducto { get; set; }
         public string strNombre { get; set; }
 
-        //De apoyo
-        public clsConexion oAD { get; set; }
-        public List<clsStoreProcedure> oProcedimientos { get; set; }
-
         #endregion
 
         #region "Constructores"

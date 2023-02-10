@@ -12,6 +12,11 @@ namespace Financiero.Metodos
     public class clsMTipoProducto : clsTipoProducto
     {
 
+        #region "Atributos"  
+        public clsConexion oAD { get; set; }
+        public List<clsStoreProcedure> oProcedimientos { get; set; }
+
+        #endregion 
         public clsMTipoProducto()
         {
             DefinicionSP();

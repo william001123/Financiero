@@ -51,9 +51,10 @@ CREATE TABLE TipoTransaccion
 
 CREATE TABLE Transaccion
 (
-	IdTransaccion INT,
+	IdTransaccion INT PRIMARY KEY IDENTITY(1,1),
 	IdTipoTransaccion INT FOREIGN KEY REFERENCES TipoTransaccion(IdTipoTransaccion),
-	IdProducto INT FOREIGN KEY REFERENCES Producto(IdProducto),
+	IdProductoOrigen INT,
+	IdProductoDestino INT,
 	numSaldo NUMERIC(18,2)
 )
 
@@ -121,6 +122,8 @@ CREATE PROCEDURE ClienteUpdate
 	@dtFechaNacimiento SMALLDATETIME
 )
 AS 
+IF((SELECT COUNT(*) FROM Cliente WHERE IdCliente = @IdCliente) > 0)
+BEGIN
 UPDATE Cliente
 SET		strTipoIdentificacion = @strTipoIdentificacion,  
 		strNumeroIdentificacion = @strNumeroIdentificacion, 
@@ -130,7 +133,13 @@ SET		strTipoIdentificacion = @strTipoIdentificacion,
 		dtFechaNacimiento = @dtFechaNacimiento, 		
 		dtFechaModificacion = GETDATE()
 WHERE IdCliente = @IdCliente
-
+END
+ELSE
+	BEGIN 		
+		DECLARE @err_message VARCHAR(255)
+		SET @err_message = 'El cliente no existe'
+		RAISERROR (@err_message, 11,1)
+	END
 GO
 
 CREATE PROCEDURE ClienteDelete
@@ -168,6 +177,26 @@ SELECT  IdCliente,
 		dtFechaCreacion, 
 		dtFechaModificacion 
 FROM Cliente
+
+GO
+
+CREATE PROCEDURE ClienteGetSingle
+(
+	@IdCliente INT
+)
+AS
+
+SELECT  IdCliente,
+		strTipoIdentificacion, 
+		strNumeroIdentificacion, 
+		strNombre, 
+		strApellido, 
+		strEmail, 
+		dtFechaNacimiento, 
+		dtFechaCreacion, 
+		dtFechaModificacion 
+FROM Cliente
+WHERE IdCliente = @IdCliente
 
 GO
 
@@ -282,7 +311,7 @@ END
 ELSE
 	BEGIN 		
 		DECLARE @err_message VARCHAR(255)
-		SET @err_message = 'El saldo debe ser igual a cero'
+		SET @err_message = 'El saldo de la cuenta debe ser igual a cero'
 		RAISERROR (@err_message, 11,1)
 	END
 
@@ -335,6 +364,21 @@ WHERE IdCliente = @IdCliente
 
 GO
 
+CREATE PROCEDURE ProductoGet
+AS 
+SELECT  IdProducto,
+		IdTipoProducto, 
+		NumeroCuenta, 
+		intEstado, 
+		numSaldo, 
+		ExentaGMF, 
+		dtFechaCreacion, 
+		dtFechaModificacion,
+		IdCliente
+FROM Producto
+
+GO
+
 --//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 CREATE PROCEDURE TipoTransaccionGet
@@ -355,26 +399,26 @@ CREATE PROCEDURE TransaccionAdd
 )
 AS
 
-DECLARE @strError VARCHAR(200)
+DECLARE @strError VARCHAR(200) = ''
 
 IF((SELECT COUNT(*) FROM TipoTransaccion WHERE IdTipoTransaccion = @IdTipoTransaccion) = 0)
 BEGIN
 	SET @strError = 'El tipo de transacción no existe <br/>'
 END
 
-IF((SELECT COUNT(*) FROM Producto WHERE IdProducto = @IdProductoOrigen) = 0 AND (@IdTipoTransaccion <> 1))
+IF((SELECT COUNT(*) FROM Producto WHERE IdProducto = @IdProductoOrigen AND intEstado = 1) = 0 AND (@IdTipoTransaccion <> 1))
 BEGIN
 	SET @strError = 'El producto origen no existe <br/>'
 END
 
-IF((SELECT COUNT(*) FROM Producto WHERE IdProducto = @IdProductoDestino) = 0 AND (@IdTipoTransaccion <> 2))
+IF((SELECT COUNT(*) FROM Producto WHERE IdProducto = @IdProductoDestino AND intEstado = 1) = 0 AND (@IdTipoTransaccion <> 2))
 BEGIN
 	SET @strError = 'El producto destino no existe <br/>'
 END
 
-IF(@IdTipoTransaccion = 1)
+IF(@IdTipoTransaccion <> 1)
 BEGIN
-	DECLARE @numSaldoNew NUMERIC(18,2) = (SELECT numSaldo FROM Producto WHERE IdProducto = @IdProductoDestino)
+	DECLARE @numSaldoNew NUMERIC(18,2) = (SELECT numSaldo FROM Producto WHERE IdProducto = @IdProductoOrigen)
 
 	IF(@numSaldoNew - @numSaldo < 0)
 	BEGIN	
@@ -385,37 +429,37 @@ END
 IF(@strError = '')
 BEGIN
 	
-	--Inserta e actualiza en producto origen
+	IF(@IdTipoTransaccion = 1)BEGIN SET @IdProductoOrigen = 0 END
+	IF(@IdTipoTransaccion = 2)BEGIN SET @IdProductoDestino = 0 END
+
+	IF(@IdTipoTransaccion <> 1)
+	BEGIN		
+		--Inserta e actualiza en producto origen
+		EXECUTE ProductoUpdateSaldo @IdProductoOrigen, @numSaldo, 2
+	END
+
+	IF(@IdTipoTransaccion <> 2)
+	BEGIN		
+		EXECUTE ProductoUpdateSaldo @IdProductoDestino, @numSaldo, 1
+	END
+
+	--Inserta e actualiza en producto destino
 	INSERT INTO Transaccion
 	(
 		IdTipoTransaccion,
-		IdProducto,
+		IdProductoOrigen,
+		IdProductoDestino,
 		numSaldo
 	)
 	VALUES
 	(
 		@IdTipoTransaccion,
 		@IdProductoOrigen,
-		@numSaldo
-	)
-
-	EXECUTE ProductoUpdateSaldo @IdProductoOrigen, @numSaldo, 2
-	
-	--Inserta e actualiza en producto destino
-	INSERT INTO Transaccion
-	(
-		IdTipoTransaccion,
-		IdProducto,
-		numSaldo
-	)
-	VALUES
-	(
-		@IdTipoTransaccion,
 		@IdProductoDestino,
 		@numSaldo
 	)
 
-	EXECUTE ProductoUpdateSaldo @IdProductoDestino, @numSaldo, 1
+	SELECT @@IDENTITY
 
 END
 ELSE
@@ -431,11 +475,14 @@ CREATE PROCEDURE TransaccionGetByProducto
 	@IdProducto INT
 )
 AS
-SELECT  IdProducto, 
+
+SELECT  IdTransaccion,
 		IdTipoTransaccion,  
-		numSaldo
-FROM Transaccion
-WHERE IdProducto = @IdProducto
+		numSaldo,
+		IdProductoOrigen,
+		IdProductoDestino
+FROM Transaccion TRANS
+WHERE IdProductoOrigen = @IdProducto OR IdProductoDestino = @IdProducto
 
 --------------//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 GO

@@ -23,10 +23,6 @@ namespace Financiero.Models
         public DateTime dtFechaModificacion { get; set; }
         public int IdCliente { get; set; }
 
-        //De apoyo
-        public clsConexion oAD { get; set; }
-        public List<clsStoreProcedure> oProcedimientos { get; set; }
-
         #endregion
 
         #region "Constructores"

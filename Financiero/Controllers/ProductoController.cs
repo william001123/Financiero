@@ -101,7 +101,28 @@ namespace Financiero.Controllers
             {
                 throw ex;
             }
+        }
 
+        [HttpGet]
+        public List<clsProducto> Get()
+        {
+            try
+            {
+                oListProducto = oMProducto.Obtener();
+
+                if (oListProducto.Count != 0)
+                {
+                    return oListProducto;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                throw ex;
+            }
         }
     }
 }

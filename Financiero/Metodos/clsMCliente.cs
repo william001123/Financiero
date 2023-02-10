@@ -12,6 +12,12 @@ namespace Financiero.Metodos
     public class clsMCliente : clsCliente
     {
 
+        #region "Atributos"  
+        public clsConexion oAD { get; set; }
+        public List<clsStoreProcedure> oProcedimientos { get; set; }
+
+        #endregion 
+
         public clsMCliente()
         {
             DefinicionSP();
@@ -48,7 +54,11 @@ namespace Financiero.Metodos
                 oProcedimientos[2].AddParametro("@IdCliente", OleDbType.Integer, ParameterDirection.Input, DBNull.Value);
 
                 //Obtener
-                oProcedimientos.Add(new clsStoreProcedure("ClienteGet"));                
+                oProcedimientos.Add(new clsStoreProcedure("ClienteGet"));
+
+                //Obtener Uno
+                oProcedimientos.Add(new clsStoreProcedure("ClienteGetSingle"));
+                oProcedimientos[4].AddParametro("@IdCliente", OleDbType.Integer, ParameterDirection.Input, DBNull.Value);
             }
             catch (Exception ex)
             {
@@ -123,6 +133,50 @@ namespace Financiero.Metodos
 
                 }
                 return oObjeto;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public List<clsCliente> ObtenerUno(int _IdCliente)
+        {
+            try
+            {
+                oAD = new clsConexion();
+                DataView dv;
+                IdCliente = _IdCliente;
+
+                dv = oAD.RunProcSQL_DataView(oProcedimientos[4].strNombreSP, this, oProcedimientos[4].oParams);
+                List<clsCliente> oObjeto = new List<clsCliente>();
+                foreach (DataRowView oRow in dv)
+                {
+                    oObjeto.Add(new clsCliente(Convert.ToInt32(oRow["IdCliente"]),
+                                                Convert.ToString(oRow["strTipoIdentificacion"]),
+                                                Convert.ToString(oRow["strNumeroIdentificacion"]),
+                                                Convert.ToString(oRow["strNombre"]),
+                                                Convert.ToString(oRow["strApellido"]),
+                                                Convert.ToString(oRow["strEmail"]),
+                                                Convert.ToDateTime(oRow["dtFechaNacimiento"]),
+                                                Convert.ToDateTime(oRow["dtFechaCreacion"]),
+                                                Convert.ToDateTime(oRow["dtFechaModificacion"])));
+
+                }
+                return oObjeto;
+
+                //if (dv.Count > 0)
+                //{
+                //    IdCliente = Convert.ToInt32(dv[0]["IdCliente"]);
+                //    strTipoIdentificacion = Convert.ToString(dv[0]["strTipoIdentificacion"]);
+                //    strNumeroIdentificacion = Convert.ToString(dv[0]["strNumeroIdentificacion"]);
+                //    strNombre = Convert.ToString(dv[0]["strNombre"]);
+                //    strApellido = Convert.ToString(dv[0]["strApellido"]);
+                //    strEmail = Convert.ToString(dv[0]["strEmail"]);
+                //    dtFechaNacimiento = Convert.ToDateTime(dv[0]["dtFechaNacimiento"]);
+                //    dtFechaCreacion = Convert.ToDateTime(dv[0]["dtFechaCreacion"]);
+                //    dtFechaModificacion = Convert.ToDateTime(dv[0]["dtFechaModificacion"]);
+                //}
             }
             catch (Exception ex)
             {

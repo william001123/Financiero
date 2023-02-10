@@ -11,6 +11,7 @@ namespace Financiero.Controllers
     {
 
         public clsMCliente oMCliente { get; set; } = new clsMCliente();
+        public clsCliente oCliente { get; set; } = new clsCliente();
         public List<clsCliente> oListCliente { get; set; } = new List<clsCliente>();
 
         [HttpPost]
@@ -128,7 +129,29 @@ namespace Financiero.Controllers
             {
                 throw ex;
             }
-
         }
+
+        [HttpGet]
+        public List<clsCliente> GetSingle(int _IdCliente)
+        {
+            try
+            {
+                oListCliente = oMCliente.ObtenerUno(_IdCliente);
+
+                if (oListCliente.Count != 0)
+                {
+                    return oListCliente;
+                }
+                else
+                {
+                    return null;
+                }
+            }
+            catch (System.Exception ex)
+            {
+                throw ex;
+            }
+        }
+
     }
 }

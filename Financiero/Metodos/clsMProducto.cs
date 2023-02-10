@@ -12,6 +12,12 @@ namespace Financiero.Metodos
     public class clsMProducto : clsProducto
     {
 
+        #region "Atributos"  
+        public clsConexion oAD { get; set; }
+        public List<clsStoreProcedure> oProcedimientos { get; set; }
+
+        #endregion 
+
         public clsMProducto()
         {
             DefinicionSP();
@@ -36,9 +42,12 @@ namespace Financiero.Metodos
                 oProcedimientos[1].AddParametro("@IdProducto", OleDbType.Integer, ParameterDirection.Input, DBNull.Value);
                 oProcedimientos[1].AddParametro("@intEstado", OleDbType.Integer, ParameterDirection.Input, DBNull.Value);
 
-                //Obtener
+                //Obtener por cliente
                 oProcedimientos.Add(new clsStoreProcedure("ProductoGetByCliente"));
-                oProcedimientos[2].AddParametro("@IdCliente", OleDbType.Integer, ParameterDirection.Input, DBNull.Value);             
+                oProcedimientos[2].AddParametro("@IdCliente", OleDbType.Integer, ParameterDirection.Input, DBNull.Value);
+
+                //Obtener todo
+                oProcedimientos.Add(new clsStoreProcedure("ProductoGet"));                
             }
             catch (Exception ex)
             {
@@ -84,6 +93,36 @@ namespace Financiero.Metodos
                 List<clsProducto> oObjeto = new List<clsProducto>();
                 foreach (DataRowView oRow in dv)
                 {                  
+                    oObjeto.Add(new clsProducto(Convert.ToInt32(oRow["IdProducto"]),
+                                                Convert.ToInt32(oRow["IdTipoProducto"]),
+                                                Convert.ToString(oRow["NumeroCuenta"]),
+                                                Convert.ToInt32(oRow["intEstado"]),
+                                                Convert.ToDouble(oRow["numSaldo"]),
+                                                Convert.ToString(oRow["ExentaGMF"]),
+                                                Convert.ToDateTime(oRow["dtFechaCreacion"]),
+                                                Convert.ToDateTime(oRow["dtFechaModificacion"]),
+                                                Convert.ToInt32(oRow["IdCliente"])));
+
+                }
+                return oObjeto;
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+        }
+
+        public List<clsProducto> Obtener()
+        {
+            try
+            {
+                oAD = new clsConexion();
+                DataView dv;
+
+                dv = oAD.RunProcSQL_DataView(oProcedimientos[3].strNombreSP, this, oProcedimientos[3].oParams);
+                List<clsProducto> oObjeto = new List<clsProducto>();
+                foreach (DataRowView oRow in dv)
+                {
                     oObjeto.Add(new clsProducto(Convert.ToInt32(oRow["IdProducto"]),
                                                 Convert.ToInt32(oRow["IdTipoProducto"]),
                                                 Convert.ToString(oRow["NumeroCuenta"]),
