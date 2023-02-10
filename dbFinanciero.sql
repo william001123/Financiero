@@ -1,5 +1,5 @@
 
---CREATE DATABASE dbFinanciero
+CREATE DATABASE dbFinanciero
 
 GO 
 
@@ -321,14 +321,15 @@ CREATE PROCEDURE ProductoGetByCliente
 	@IdCliente INT
 )
 AS 
-SELECT  IdProducto
+SELECT  IdProducto,
 		IdTipoProducto, 
 		NumeroCuenta, 
 		intEstado, 
 		numSaldo, 
 		ExentaGMF, 
 		dtFechaCreacion, 
-		dtFechaModificacion
+		dtFechaModificacion,
+		IdCliente
 FROM Producto
 WHERE IdCliente = @IdCliente
 

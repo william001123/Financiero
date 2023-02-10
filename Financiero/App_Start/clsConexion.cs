@@ -3,8 +3,6 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Data.OleDb;
-using System.Linq;
-using System.Web;
 
 namespace Financiero.App_Start
 {
@@ -41,42 +39,6 @@ namespace Financiero.App_Start
                 oComando.Parameters.Clear();
 
                 return true;
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public List<string[]> RunProcSQLOutPut(string strNomProc, object oObjeto, List<OleDbParameter> oParametros)
-        {
-            try
-            {
-                List<string[]> oResultados = new List<string[]>();
-                RefinarParametros(oObjeto, ref oParametros);
-
-                oComando = new OleDbCommand(strNomProc, oConexion);
-                oComando.CommandTimeout = 100;
-                oComando.CommandType = CommandType.StoredProcedure;
-                foreach (var item in oParametros)
-                {
-                    oComando.Parameters.Add(item);
-                    if (item.Direction == ParameterDirection.InputOutput || item.Direction == ParameterDirection.Output)
-                    {
-                        oResultados.Add(new string[] { item.ParameterName, item.OleDbType.ToString(), "" });
-                    }
-                }
-
-                oConexion.Open();
-                oComando.ExecuteNonQuery();
-                for (Int16 i = 0; i < oResultados.Count(); i++)
-                {
-                    oResultados[i][2] = oComando.Parameters[oResultados[i][0]].Value.ToString();
-                }
-                oConexion.Close();
-                oComando.Parameters.Clear();
-
-                return oResultados;
             }
             catch (Exception ex)
             {
@@ -165,34 +127,6 @@ namespace Financiero.App_Start
                 oComando.Parameters.Clear();
 
                 return new DataView(oDatos.Tables[0]);
-            }
-            catch (Exception ex)
-            {
-                throw ex;
-            }
-        }
-
-        public OleDbDataReader RunProcSQL_DataReader(string strNomProc, object oObjeto, List<OleDbParameter> oParametros)
-        {
-            try
-            {
-                RefinarParametros(oObjeto, ref oParametros);
-
-                oComando = new OleDbCommand(strNomProc, oConexion);
-                oComando.CommandTimeout = 100;
-                oComando.CommandType = CommandType.StoredProcedure;
-                foreach (var item in oParametros)
-                {
-                    oComando.Parameters.Add(item);
-                }
-
-                oConexion.Open();
-                oReader = oComando.ExecuteReader();
-                oReader.Close();
-                oConexion.Close();
-                oComando.Parameters.Clear();
-
-                return oReader;
             }
             catch (Exception ex)
             {
